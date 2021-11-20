@@ -1,0 +1,3 @@
+p in norm of all deviations is: 4
+q in deviation of each part is: 1
+Points are: [1.0, 3.0, 3.0, 6.0, 6.0, 10.0]
