@@ -7,11 +7,15 @@ def update_norm(preNorm, val, norm = 2):
     if(norm == 0):
         return preNorm + int(val != 0)
     elif(norm == 1):
-        return preNorm + val
+        return preNorm + abs(val)
     elif(norm == 2):
         return sqrt(preNorm**2+val**2)
     else:
         return max(preNorm, val)
+
+
+def update_norm_from_rep(preNorm, val, rep, norm = 2):
+    return update_norm(preNorm,val-rep,norm)
 
 def any_to_nparray(any):
     if(type(any).__module__ != np.__name__):

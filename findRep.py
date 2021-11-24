@@ -1,43 +1,101 @@
 import numpy as np
+from count_element import count_element, isSorted
 
-from norm import update_norm, deviation_vector_form_rep, find_rep_of_vector, norm_of_vector
+from norm import update_norm, deviation_vector_form_rep, find_rep_of_vector, norm_of_vector, update_norm_from_rep
+
+def update_rep_in_cluster(points, newPoint, preRep, preErr, norm = 2):
+    """
+    It gets points, new point, pre-representor, pre-error and norm
+    Return new-representor and new-error
+    """
+    
+    points = np.concatenate((points,[newPoint]))
+    
+    if(norm < 2 and isSorted(points) == 0):
+        points.sort()
+
+    count = len(points)
+    newRep, newErr = preRep, preErr
+    if(norm == 0):
+        if(newPoint == preRep):
+            return preRep, preErr
+
+        cntNew = count_element(points,newPoint,0,len(points)) + 1
+        cntPre = count - preErr - 1
+
+        if(cntPre < cntNew):
+            newRep = cntNew
+            newErr = count - cntNew
+
+    elif(norm == 1):
+        newRep = points[count//2]
+        '''
+        Remember new value should be more than median
+        '''
+        if(count % 2):
+            newErr = preErr + newPoint - newRep
+        else:
+            newErr = preErr + abs(newRep-preRep) + abs(newPoint - newRep) 
+
+    elif(norm == 2):
+        newRep = preRep + (newPoint-preRep)/count
+        newErr = np.sqrt(preErr**2 + (newPoint-preRep)*(newPoint-newRep))
+    
+    else:
+        newRep = (points.min() + newPoint) / 2
+        newErr = min(newRep-points[0], newPoint - newRep)
+
+    return newRep, newErr
+
+def update_dev_in_cluster(points, newPoint, rep, preErr, norm = 2):
+    """
+    It gets points, new point, representor, pre-error and norm
+    Return new-error
+    """
+    
+    points = np.concatenate((points,[newPoint]))
+    
+    if(norm < 2 and isSorted(points) == 0):
+        points.sort()
+
+    count = len(points)
+    newErr = preErr
+    if(norm == 0):
+        if(newPoint == rep):
+            return rep, preErr
+
+        cntNew = count_element(points,newPoint,0,len(points)) + 1
+        cntPre = count - preErr - 1
+
+        if(cntPre < cntNew):
+            newRep = cntNew
+            newErr = count - cntNew
+
+    elif(norm == 1):
+        newRep = points[count//2]
+        '''
+        Remember new value should be more than median
+        '''
+        if(count % 2):
+            newErr = preErr + newPoint - newRep
+        else:
+            newErr = preErr + abs(newRep-rep) + abs(newPoint - newRep) 
+
+    elif(norm == 2):
+        newRep = rep + (newPoint-rep)/count
+        newErr = np.sqrt(preErr**2 + (newPoint-rep)*(newPoint-newRep))
+    
+    else:
+        newRep = (points.min() + newPoint) / 2
+        newErr = min(newRep-points[0], newPoint - newRep)
+
+    return newRep, newErr
 
 def find_rep_with_DP(points, K, p = 2, q = 2, printer = 0):
     N = len(points)
     if(q == 0):
         from statistics import mode
-
         cntMode = 1
-
-        def countEl(arr, x, st, en):
-            i = first(arr, st, en-1, x, st, en)
-            if i == -1:
-                return i
-            j = last(arr, i, en-1, x, st, en);    
-            return j-i+1
-        
-        def first(arr, low, high, x, st, en):
-            if high >= low:
-                mid = (low + high)//2     
-                if (mid == st or x > arr[mid-1]) and arr[mid] == x:
-                    return mid
-                elif x > arr[mid]:
-                    return first(arr, (mid + 1), high, x, st, en)
-                else:
-                    return first(arr, low, (mid -1), x, st, en)
-            return -1
-        
-        def last(arr, low, high, x, st, en):
-            if high >= low:
-                mid = (low + high)//2
-                if(mid == en-1 or x < arr[mid+1]) and arr[mid] == x :
-                    return mid
-                elif x < arr[mid]:
-                    return last(arr, low, (mid -1), x, st, en)
-                else:
-                    return last(arr, (mid + 1), high, x, st, en)    
-            return -1
-
     k = 0
 
     dp = np.full((K,N),-1.)
@@ -57,7 +115,7 @@ def find_rep_with_DP(points, K, p = 2, q = 2, printer = 0):
         count += 1
         cnt[0][j] = count
         if(q == 0):
-            cntNw = countEl(points,nw,0,j+1)
+            cntNw = count_element(points,nw,0,j+1)
             if(cntNw > cntMode):
                 cntMode = cntNw
                 repN = nw
@@ -97,7 +155,7 @@ def find_rep_with_DP(points, K, p = 2, q = 2, printer = 0):
                 count += 1
                 cnt[0][j] = count
                 if(q == 0):
-                    cntNw = countEl(points,nw,fr,i+1)
+                    cntNw = count_element(points,nw,fr,i+1)
                     if(cntNw > cntMode):
                         cntMode = cntNw
                         repN = nw
@@ -152,23 +210,48 @@ def find_rep_with_DP(points, K, p = 2, q = 2, printer = 0):
 
     return dp[K-1][N-1], rep, cntRep
 
+def norm_deviation_after_assign(newPoint, dev, rep, j, p, q):
+    """
+    get newPoint, dev vector, value of jth representor, p and q
+    Compute deviation after assign newPoint to represetor j
+    Return norm p of all deviation
+    """
+    tmpDev = dev.copy()
+    # tmpDev[j] = update_rep_in_cluster(assignRep, newPoint, rep[j], dev[j], q)[1]
+    tmpDev[j] = update_norm_from_rep(dev[j],newPoint,rep,q)
+    # return norm_of_vector(tmpDev, p)
+    return norm_of_vector(tmpDev, p)
+
 def assign_and_find_error_and_new_rep(points, p, q, rep):
     K = len(rep)
     assignRep = {i:[] for i in range(K)}
-    dev = np.zeros(K)
+    curDev = np.zeros(K)
+    newRep = np.zeros(K)
 
     for i in range(len(points)):
-        z = (np.abs(points[i] - rep)).argmin()
+        assign_each_rep = list(map(lambda x: norm_deviation_after_assign(points[i],curDev,rep[x],x,p,q),range(K)))
+        # assign_each_rep = []
+        # for j in range(K):
+        #     assign_each_rep.append(norm_deviation_after_assign(points[i],curDev,rep[j],j,p,q))
+        z = np.argmin(assign_each_rep)
+        curDev[z] = update_norm_from_rep(curDev[z],points[i],rep[z],q)
         assignRep[z].append(points[i])
-    
-    nRep = np.array(rep)
+
+    # for i in range(len(points)):
+    #     z = (np.abs(points[i] - rep)).argmin()
+    #     assignRep[z].append(points[i])
+
+    newDev = np.zeros(K)
+
     for i in range(K):
         if(len(assignRep[i])):  
-            dev[i] = deviation_vector_form_rep(assignRep[i],rep[i],q)
+            newRep[i] = find_rep_of_vector(assignRep[i], q)
+            newDev[i] = deviation_vector_form_rep(assignRep[i],newRep[i],q)
 
-            nRep[i] = find_rep_of_vector(assignRep[i], q)
     cntRep = list(map(lambda x: len(x[1]),assignRep.items()))
-    return norm_of_vector(dev, p), nRep, cntRep
+
+    return norm_of_vector(newDev, p), newRep, cntRep
+
 
 def find_rep_with_AS(points, K, p = 2, q = 2, printer = 0):
     rep = np.zeros(K)

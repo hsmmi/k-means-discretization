@@ -131,3 +131,5 @@ dmypy.json
 # my files
 test.py
 docs
+.DS_Store
+**/.DS_Store
