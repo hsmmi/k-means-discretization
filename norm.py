@@ -11,7 +11,7 @@ def update_norm(preNorm, val, norm = 2):
     elif(norm == 2):
         return sqrt(preNorm**2+val**2)
     else:
-        return max(preNorm, val)
+        return max(preNorm, abs(val))
 
 
 def update_norm_from_rep(preNorm, val, rep, norm = 2):

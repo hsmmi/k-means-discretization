@@ -1,7 +1,7 @@
 import os
 from random import randint
 
-def buildTestcase(N,p,q,Range):
+def build_testcase(N,p,q,Range):
     with open(os.path.join(os.path.dirname(__file__),"HW1DS.txt"),'w') as f:
         f.write(f'p in norm of all deviations is: {p}\n')
 
@@ -16,7 +16,7 @@ def buildTestcase(N,p,q,Range):
     with open(os.path.join(os.path.dirname(__file__),"HW1DS.txt"),'a') as f:
         f.write(f'Points are: {tmp}\n')
 
-def readTestcase(file, printer = 0):
+def read_testcase(file, printer = 0):
     with open(os.path.join(os.path.dirname(__file__),file),'r') as f:
         p = int(f.readline().split(':')[1])
         q = int(f.readline().split(':')[1])
@@ -29,7 +29,7 @@ def readTestcase(file, printer = 0):
         print(f'Points are:\n{points}\n')
     return p, q, points
 
-def readDataset(file, atr):
+def read_dataset(file, atr):
     if (type(atr) == int):
         with open(os.path.join(os.path.dirname(__file__),file),'r') as f:
             return list(map(lambda x: float(x.split(',')[atr]), f.read().splitlines()))

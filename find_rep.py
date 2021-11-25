@@ -1,5 +1,5 @@
 import numpy as np
-from count_element import count_element, isSorted
+from count_element import count_element, is_sorted
 
 from norm import update_norm, deviation_vector_form_rep, find_rep_of_vector, norm_of_vector, update_norm_from_rep
 
@@ -11,7 +11,7 @@ def update_rep_in_cluster(points, newPoint, preRep, preErr, norm = 2):
     
     points = np.concatenate((points,[newPoint]))
     
-    if(norm < 2 and isSorted(points) == 0):
+    if(norm < 2 and is_sorted(points) == 0):
         points.sort()
 
     count = len(points)
@@ -55,7 +55,7 @@ def update_dev_in_cluster(points, newPoint, rep, preErr, norm = 2):
     
     points = np.concatenate((points,[newPoint]))
     
-    if(norm < 2 and isSorted(points) == 0):
+    if(norm < 2 and is_sorted(points) == 0):
         points.sort()
 
     count = len(points)
@@ -217,23 +217,20 @@ def norm_deviation_after_assign(newPoint, dev, rep, j, p, q):
     Return norm p of all deviation
     """
     tmpDev = dev.copy()
-    # tmpDev[j] = update_rep_in_cluster(assignRep, newPoint, rep[j], dev[j], q)[1]
     tmpDev[j] = update_norm_from_rep(dev[j],newPoint,rep,q)
-    # return norm_of_vector(tmpDev, p)
     return norm_of_vector(tmpDev, p)
 
 def assign_and_find_error_and_new_rep(points, p, q, rep):
     K = len(rep)
     assignRep = {i:[] for i in range(K)}
-    curDev = np.zeros(K)
     newRep = np.zeros(K)
 
-    for i in range(len(points)):
-        assign_each_rep = list(map(lambda x: norm_deviation_after_assign(points[i],curDev,rep[x],x,p,q),range(K)))
-        # assign_each_rep = []
-        # for j in range(K):
-        #     assign_each_rep.append(norm_deviation_after_assign(points[i],curDev,rep[j],j,p,q))
-        z = np.argmin(assign_each_rep)
+    curDev = np.zeros(K)
+    shuffle_i = np.arange(len(points))
+    np.random.shuffle(shuffle_i)
+    for i in shuffle_i:
+        norm_after_assign_each_rep = list(map(lambda x: norm_deviation_after_assign(points[i],curDev,rep[x],x,p,q),range(K)))
+        z = np.argmin(norm_after_assign_each_rep)
         curDev[z] = update_norm_from_rep(curDev[z],points[i],rep[z],q)
         assignRep[z].append(points[i])
 
@@ -248,20 +245,18 @@ def assign_and_find_error_and_new_rep(points, p, q, rep):
             newRep[i] = find_rep_of_vector(assignRep[i], q)
             newDev[i] = deviation_vector_form_rep(assignRep[i],newRep[i],q)
 
-    cntRep = list(map(lambda x: len(x[1]),assignRep.items()))
+    cntRep = np.array(list(map(lambda x: len(x[1]),assignRep.items())))
 
     return norm_of_vector(newDev, p), newRep, cntRep
 
-
-def find_rep_with_AS(points, K, p = 2, q = 2, printer = 0):
-    rep = np.zeros(K)
+def find_rep_with_AS(points, K, p = 2, q = 2, plotter = 0):
     sRenge = points[0]
     eRange = points[-1] 
-    for i in range(K):
-        rep[i] = np.random.uniform(sRenge, eRange)
+    rep = np.random.uniform(sRenge, eRange, K) 
     rep.sort()
+    rep = np.array([4.6,0,5.05])   
 
-    if(printer): 
+    if(plotter): 
         from matplotlib import pyplot as plt
         y = np.zeros_like(rep) + 0
         plt.plot(rep, y, 'x')
@@ -272,7 +267,7 @@ def find_rep_with_AS(points, K, p = 2, q = 2, printer = 0):
     err, nRep, cntRep = assign_and_find_error_and_new_rep(points,p,q,rep)
     while(any(rep != nRep)):
         rep = nRep
-        if(printer): 
+        if(plotter): 
             from matplotlib import pyplot
             y = np.zeros_like(rep) + 0
             pyplot.plot(rep, y, 'x')
@@ -285,10 +280,12 @@ def find_rep_with_AS(points, K, p = 2, q = 2, printer = 0):
 
 def find_rep_with_AS_best(points, K, p = 2, q = 2):
     N = len(points)
-    best = (N*(points[-1]-points[0])**p,None,None)
+    # best = (N*(points[-1]-points[0])**2,None,None)
+    best = (norm_of_vector([norm_of_vector(points[-1]-points[0],q)] * K,p),None,None)
     noImp = 0
-    while(noImp < np.sqrt(N) * K):
-        tmp = find_rep_with_AS(points,K,p,q,printer=0)
+    while(noImp < np.sqrt(N) * K**2):
+        # print(noImp)
+        tmp = find_rep_with_AS(points,K,p,q,0)
         if(tmp[0] < best[0]):
             best = tmp
             noImp = 0
