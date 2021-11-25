@@ -35,7 +35,7 @@ def deviation_vector_form_rep(vec , rep, norm = 2) -> float:
         return sqrt(sum((vec-rep)**2))
 
     else:
-        return max(abs(rep - vec[0]),abs(rep - vec[-1]))
+        return max(abs(rep - vec.min()),abs(rep - vec.max()))
 
 def find_rep_of_vector(vec , norm = 2):
     vec = any_to_nparray(vec)
