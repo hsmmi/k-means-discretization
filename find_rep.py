@@ -254,7 +254,7 @@ def find_rep_with_AS(points, K, p = 2, q = 2, plotter = 0):
     eRange = points[-1] 
     rep = np.random.uniform(sRenge, eRange, K) 
     rep.sort()
-    rep = np.array([4.6,0,5.05])   
+    # rep = np.array([4.6,0,5.05])   
 
     if(plotter): 
         from matplotlib import pyplot as plt
@@ -264,9 +264,16 @@ def find_rep_with_AS(points, K, p = 2, q = 2, plotter = 0):
         plt.plot(points, y, '.')
         plt.show()
 
-    err, nRep, cntRep = assign_and_find_error_and_new_rep(points,p,q,rep)
-    while(any(rep != nRep)):
-        rep = nRep
+    # err, nRep, cntRep = assign_and_find_error_and_new_rep(points,p,q,rep)
+    # while(any(rep != nRep)):
+        # if(q == 2):
+        #     print(f'err{err}\n{rep}')
+        # rep = nRep
+        # err, nRep, cntRep = assign_and_find_error_and_new_rep(points,p,q,rep)
+    noImp = 0
+    N = len(points)
+    best = assign_and_find_error_and_new_rep(points,p,q,rep)
+    while(noImp < np.sqrt(N) * K**2):
         if(plotter): 
             from matplotlib import pyplot
             y = np.zeros_like(rep) + 0
@@ -274,9 +281,15 @@ def find_rep_with_AS(points, K, p = 2, q = 2, plotter = 0):
             y = np.zeros_like(points) + 0
             pyplot.plot(points, y, '.')
             pyplot.show()
-        
-        err, nRep, cntRep = assign_and_find_error_and_new_rep(points,p,q,rep)
-    return err, rep, cntRep
+        tmp = assign_and_find_error_and_new_rep(points,p,q,rep)
+        if(tmp[0] < best[0]):
+            best = tmp
+            noImp = 0
+        else:
+            noImp = noImp + 1
+        rep = tmp[1]
+    # return err, rep, cntRep
+    return best
 
 def find_rep_with_AS_best(points, K, p = 2, q = 2):
     N = len(points)
@@ -285,6 +298,8 @@ def find_rep_with_AS_best(points, K, p = 2, q = 2):
     noImp = 0
     while(noImp < np.sqrt(N) * K**2):
         # print(noImp)
+        if(q == 2):
+            print(f'err{noImp}')
         tmp = find_rep_with_AS(points,K,p,q,0)
         if(tmp[0] < best[0]):
             best = tmp

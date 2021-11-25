@@ -67,4 +67,4 @@ def norm_of_vector(vec , norm = 2) -> float:
         return sqrt(sum(vec**2))
 
     else:
-        return vec.max()
+        return max(abs(vec.min()),abs(vec.max()))

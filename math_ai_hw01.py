@@ -31,7 +31,7 @@ from docx.enum.table import WD_TABLE_ALIGNMENT
 
 for atr in range(4):
     data = ""
-    colName, points = read_dataset_with_pandas("dataset/irisTest.csv",0)
+    colName, points = read_dataset_with_pandas("dataset/iris.csv",0)
     points = points.to_numpy()
     points = points.ravel()
     points = np.sort(points, kind='mergesort')
@@ -51,14 +51,17 @@ for atr in range(4):
             # K = find_k_with_elbow(points,find_rep_with_DP,p=p,q=q)
             print(f'K is {K} in atr={atr} and p={p} and q={q}')
             resultDP = find_rep_with_DP(points,K,p,q)
-            if(atr == 1 and p == 1 and q == np.inf):
+            if(p == 2 and q == 0):
                 print('hi')
-            resultAS = find_rep_with_AS_best(points,K,p,q)
-            print(f'DP:{round(resultDP[0],3)}\tAS:{round(resultAS[0],3)}\n')
+            if(p == np.inf and q == 0):
+                print('hi')
+            # resultAS = find_rep_with_AS_best(points,K,p,q)
+            resultAS = find_rep_with_AS(points,K,p,q)
+            print(f'DP:{round(resultDP[0],3)}\tAS:{round(resultAS[0],3)}')
             if(round(resultDP[0],6) > round(resultAS[0],6)):
-                print(f'Shit10 :) dp{round(resultDP[0],6)} / as{round(resultAS[0],6)}')
-
-            data += f'DP:{round(resultDP[0],3)}/AS:{round(resultAS[0],3)}'
+                print(f'Shit16 :) dp{round(resultDP[0],6)} / as{round(resultAS[0],6)}')
+            print('\n')
+            data += f'DP:{round(resultDP[0],3)}/AS:{round(resultAS[0],3)},'
             # data += f'K:{K}/DP:{round(resultDP[0],3)}/AS:{round(resultAS[0],3)}'
         data = data[:-1] + '\n'
 
