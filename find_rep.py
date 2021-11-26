@@ -5,8 +5,8 @@ from norm import update_norm, deviation_vector_form_rep, find_rep_of_vector, nor
 
 def update_rep_and_err_in_cluster(points, new_point, pre_rep, pre_err, norm = 2):
     """
-    It gets points, new point, pre-representor, pre-error and norm
-    Return new-representor and new-error
+    It gets points, new point, pre-representer, pre-error and norm
+    Return new-representer and new-error
     """
     
     points = np.concatenate((points,[new_point]))
@@ -32,9 +32,7 @@ def update_rep_and_err_in_cluster(points, new_point, pre_rep, pre_err, norm = 2)
 
     elif(norm == 1):
         new_rep = points[count//2]
-        '''
-        Remember new value should be more than median
-        '''
+
         if(count % 2):
             new_err = pre_err + abs(new_point - new_rep)
         else:
@@ -50,54 +48,12 @@ def update_rep_and_err_in_cluster(points, new_point, pre_rep, pre_err, norm = 2)
 
     return new_rep, new_err
 
-def update_dev_in_cluster(points, new_point, rep, pre_err, norm = 2):
-    """
-    It gets points, new point, representor, pre-error and norm
-    Return new-error
-    """
-    
-    points = np.concatenate((points,[new_point]))
-    
-    if(norm < 2 and is_sorted(points) == 0):
-        points.sort()
-
-    count = len(points)
-    new_err = pre_err
-    if(norm == 0):
-        if(new_point == rep):
-            return rep, pre_err
-
-        new_cnt = count_element(points,new_point,0,len(points)) + 1
-        pre_cnt = count - pre_err - 1
-
-        if(pre_cnt < new_cnt):
-            new_rep = new_cnt
-            new_err = count - new_cnt
-
-    elif(norm == 1):
-        new_rep = points[count//2]
-        '''
-        Remember new value should be more than median
-        '''
-        if(count % 2):
-            new_err = pre_err + new_point - new_rep
-        else:
-            new_err = pre_err + abs(new_rep-rep) + abs(new_point - new_rep) 
-
-    elif(norm == 2):
-        new_rep = rep + (new_point-rep)/count
-        new_err = np.sqrt(pre_err**2 + (new_point-rep)*(new_point-new_rep))
-    
-    else:
-        new_rep = (points.min() + new_point) / 2
-        new_err = min(new_rep-points[0], new_point - new_rep)
-
-    return new_rep, new_err
-
 def find_rep_with_DP(points, K, p = 2, q = 2, printer = 0):
     N = len(points)
+
     if(q == 0):
         from statistics import mode
+        
     k = 0
 
     dp = np.full((K,N),-1.)
@@ -180,7 +136,7 @@ def find_rep_with_DP(points, K, p = 2, q = 2, printer = 0):
 
 def norm_deviation_after_assign(new_point, dev, rep, j, p, q):
     """
-    get new_point, dev vector, value of jth representor, p and q
+    get new_point, dev vector, value of jth representer, p and q
     Compute deviation after assign new_point to represetor j
     Return norm p of all deviation
     """
@@ -188,26 +144,34 @@ def norm_deviation_after_assign(new_point, dev, rep, j, p, q):
     tmp_dev[j] = update_norm_from_rep(dev[j],new_point,rep,q)
     return norm_of_vector(tmp_dev, p)
 
-def assign_and_find_error_and_new_rep(points, p, q, rep):
-    K = len(rep)
+def assign_and_find_error_and_new_rep(points, pre_rep, p, q):
+    """
+    It gets points, pre-representers, norm of deviation all clusters(p)
+    and norm of deviation in each cluster(q) then assign each point in 
+    random order to representer than after assign norm of deviation all
+    cluster be minimized and after assign all points, will update 
+    representers 
+    Return norm of deviation all cluster, new represenros and size of
+    each representer
+    """
+    K = len(pre_rep)
+    pre_rep.sort()
+    
     assign_to_rep = {i:[] for i in range(K)}
-    new_rep = np.zeros(K)
-    rep.sort()
     cur_dev = np.zeros(K)
+
     shuffle_i = np.arange(len(points))
     np.random.shuffle(shuffle_i)
-    for i in shuffle_i:
-        norm_after_assign_each_rep = list(map(lambda x: norm_deviation_after_assign(points[i],cur_dev,rep[x],x,p,q),range(K)))
-        z = np.argmin(norm_after_assign_each_rep)
-        cur_dev[z] = update_norm_from_rep(cur_dev[z],points[i],rep[z],q)
-        assign_to_rep[z].append(points[i])
 
-    # for i in range(len(points)):
-    #     z = (np.abs(points[i] - rep)).argmin()
-    #     assign_to_rep[z].append(points[i])
+    for i in shuffle_i:
+        norm_after_assign_each_rep = list(map(lambda x: norm_deviation_after_assign(points[i],cur_dev,pre_rep[x],x,p,q),range(K)))
+        z = np.argmin(norm_after_assign_each_rep)
+        cur_dev[z] = update_norm_from_rep(cur_dev[z],points[i],pre_rep[z],q)
+        assign_to_rep[z].append(points[i])
 
     new_dev = np.zeros(K)
 
+    new_rep = np.zeros(K)
     for i in range(K):
         if(len(assign_to_rep[i])):  
             new_rep[i] = find_rep_of_vector(assign_to_rep[i], q)
@@ -222,7 +186,6 @@ def find_rep_with_AS(points, K, p = 2, q = 2, plotter = 0):
     en_range = points[-1] 
     rep = np.random.uniform(st_renge, en_range, K) 
     rep.sort()
-    # rep = np.array([4.6,0,5.05])   
 
     if(plotter): 
         from matplotlib import pyplot as plt
@@ -234,7 +197,7 @@ def find_rep_with_AS(points, K, p = 2, q = 2, plotter = 0):
 
     noImp = 0
     N = len(points)
-    best = assign_and_find_error_and_new_rep(points,p,q,rep)
+    best = assign_and_find_error_and_new_rep(points, rep, p, q)
     while(noImp < np.sqrt(N) * K**2):
         if(plotter): 
             from matplotlib import pyplot
@@ -243,7 +206,7 @@ def find_rep_with_AS(points, K, p = 2, q = 2, plotter = 0):
             y = np.zeros_like(points) + 0
             pyplot.plot(points, y, '.')
             pyplot.show()
-        tmp = assign_and_find_error_and_new_rep(points,p,q,rep)
+        tmp = assign_and_find_error_and_new_rep(points, rep, p, q)
         if(tmp[0] < best[0]):
             best = tmp
             noImp = 0
@@ -252,24 +215,11 @@ def find_rep_with_AS(points, K, p = 2, q = 2, plotter = 0):
         rep = tmp[1]
     return best
 
-def find_rep_with_AS_best(points, K, p = 2, q = 2):
-    N = len(points)
-
-    best = find_rep_with_AS(points,K,p,q,0)
-    noImp = 0
-
-    while(noImp < np.sqrt(N) * K**2):
-
-        tmp = find_rep_with_AS(points,K,p,q,0)
-        if(tmp[0] < best[0]):
-            best = tmp
-            noImp = 0
-        else:
-            noImp = noImp + 1
-
-    return best
-
-def find_parts(points,size_rep):
+def find_ranges(points,size_rep):
+    """
+    It gets all point and size of each representer
+    Return range of each representer [s, e)
+    """
     K = len(points)
     P = [(None,None)] * K
     cnt_points = 0
