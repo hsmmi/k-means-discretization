@@ -20,7 +20,7 @@ for atr in range(4):
 
     for i, p in enumerate(ind):
         for j, q in enumerate(ind):
-            K = 2
+            K = 3
             # K = find_k_with_elbow(points,find_rep_with_DP,p,q)
             print(f'K is {K} in atr={atr} and p={p} and q={q}')
             resultDP = find_rep_with_DP(points,K,p,q)
@@ -36,4 +36,3 @@ for atr in range(4):
 
     header = f'Result on attribute {atr+1} of iris dataset'
     doc = dataframe_to_docx_table(header,data,f'report/hw01.docx',doc,save=(atr==3))
-    doc = docx.Document()
