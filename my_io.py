@@ -57,7 +57,7 @@ def dataframe_to_docx_table(header,data,file,doc=None,save=1):
     import docx
     if(doc == None):
         doc = docx.Document()
-    doc.add_heading(header, 0)
+    doc.add_heading(header, 1)
 
     table = doc.add_table(rows=len(data.index)+1, cols=len(data.columns)+1)
 
