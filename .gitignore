@@ -130,6 +130,6 @@ dmypy.json
 
 # my files
 test.py
-docs
+report
 .DS_Store
 **/.DS_Store
