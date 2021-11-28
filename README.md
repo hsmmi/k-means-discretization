@@ -1,2 +1,2 @@
 # k-means-discretization
-My first homework on mathematics of AI in Shiraz University 
+Homework#1 in Mathematics of Artificial Intelligence at Shiraz University
