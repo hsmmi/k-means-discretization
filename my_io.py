@@ -1,5 +1,6 @@
 import os
 from random import randint
+import numpy as np
 
 def build_testcase(N,p,q,Range):
     with open(os.path.join(os.path.dirname(__file__),"HW1DS.txt"),'w') as f:
@@ -47,6 +48,15 @@ def read_dataset_with_pandas(file, atr= None):
     data = pd.read_csv(os.path.join(os.path.dirname(__file__),file),usecols=colName)
 
     return colName, data
+
+def read_dataset_with_pandas_to_nparray(file, atr= None):
+    data = read_dataset_with_pandas(file, atr)[1]
+    data = data.to_numpy()
+    if (type(atr) == int):
+        data = np.array(list(map(lambda x:x[0], data)))
+    if(data.dtype == 'int'):
+        data = data.astype('float')
+    return data
 
 def dataframe_to_docx_table(header,data,file,doc=None,save=1):
     """
